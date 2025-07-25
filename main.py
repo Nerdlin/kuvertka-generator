@@ -8,10 +8,10 @@ app = FastAPI()
 @app.get("/", response_class=HTMLResponse)
 def form():
     return """
-    <h2>Введите имя</h2>
+    <h2>Введите имя или несколько имён через запятую</h2>
     <form action="/generate" method="post">
-        <input type="text" name="name" placeholder="Арман, Ержан">
-        <button type="submit">Создать кувертки</button>
+        <input type="text" name="name" placeholder="Арман, Ержан" style="padding: 8px; width: 250px;">
+        <button type="submit" style="padding: 8px 12px; margin-left: 10px;">Создать кувертки</button>
     </form>
     """
 
@@ -25,8 +25,11 @@ def generate(name: str = Form(...)):
         prs = Presentation("template.pptx")
         for slide in prs.slides:
             for shape in slide.shapes:
-                if shape.has_text_frame and "ИМЯ" in shape.text:
-                    shape.text = shape.text.replace("ИМЯ", n)
+                if shape.has_text_frame:
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            if "ИМЯ" in run.text:
+                                run.text = run.text.replace("ИМЯ", n)
         filename = f"output/{n}_кувертка.pptx"
         prs.save(filename)
         output_files.append(filename)
